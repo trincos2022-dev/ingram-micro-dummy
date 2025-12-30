@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "451276576574c92822f00508e5780330"
-name = "ingram-micro-dummy"
-application_url = "https://ingram-micro-dummy.vercel.app"
+name = "ingram-micro-dummy-z9h6"
+application_url = "https://ingram-micro-dummy-z9h6.vercel.app/"
 embedded = true
 
 [webhooks]
@@ -23,7 +23,7 @@ optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ "https://ingram-micro-dummy.vercel.app/auth/callback" ]
+redirect_urls = [ "https://ingram-micro-dummy-z9h6.vercel.app/auth/callback" ]
 
 [build]
 automatically_update_urls_on_dev = true

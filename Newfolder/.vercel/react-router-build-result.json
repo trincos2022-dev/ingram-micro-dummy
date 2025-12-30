@@ -138,9 +138,9 @@
     }
   },
   "reactRouterConfig": {
-    "appDirectory": "C:/Users/hp/Desktop/ingram-mirco-main/New folder/app",
+    "appDirectory": "C:/Users/hp/Desktop/ingram-mirco-main/New folder/Newfolder/app",
     "basename": "/",
-    "buildDirectory": "C:/Users/hp/Desktop/ingram-mirco-main/New folder/build",
+    "buildDirectory": "C:/Users/hp/Desktop/ingram-mirco-main/New folder/Newfolder/build",
     "future": {
       "v8_middleware": false,
       "unstable_optimizeDeps": false,

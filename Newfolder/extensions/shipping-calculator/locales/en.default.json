@@ -1,0 +1,14 @@
+{
+  "shipping_calculator": {
+    "title": "Estimate Shipping",
+    "country_label": "Country/Region",
+    "province_label": "State/Province",
+    "zip_label": "ZIP/Postal Code",
+    "city_label": "City (optional)",
+    "button_text": "Calculate Shipping",
+    "results_title": "Available Shipping Options:",
+    "loading_text": "Calculating shipping rates...",
+    "error_empty_cart": "Your cart is empty",
+    "error_no_rates": "No shipping options available for this address"
+  }
+}

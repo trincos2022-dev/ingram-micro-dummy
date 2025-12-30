@@ -1,0 +1,392 @@
+{% comment %}
+  Ingram Micro Shipping Calculator Block
+  This block provides real-time shipping estimates on the cart page
+  by calling the Ingram Micro freight estimate API.
+{% endcomment %}
+
+<div class="ingram-shipping-calculator" data-shop="{{ shop.permanent_domain }}" data-api-url="{{ block.settings.api_url }}">
+  <h3 class="ingram-shipping-calculator__title">{{ block.settings.title }}</h3>
+
+  <form class="ingram-shipping-calculator__form" id="ingram-shipping-form">
+    <div class="ingram-shipping-calculator__field">
+      <label for="ingram-country">{{ block.settings.country_label }}</label>
+      <select id="ingram-country" name="country" required>
+        <option value="US" selected>United States</option>
+        <option value="CA">Canada</option>
+      </select>
+    </div>
+
+    <div class="ingram-shipping-calculator__field">
+      <label for="ingram-province">{{ block.settings.province_label }}</label>
+      <select id="ingram-province" name="province">
+        <option value="">Select state/province</option>
+      </select>
+    </div>
+
+    <div class="ingram-shipping-calculator__field">
+      <label for="ingram-zip">{{ block.settings.zip_label }}</label>
+      <input type="text" id="ingram-zip" name="zip" placeholder="Enter ZIP/postal code" required>
+    </div>
+
+    <div class="ingram-shipping-calculator__field">
+      <label for="ingram-city">{{ block.settings.city_label }}</label>
+      <input type="text" id="ingram-city" name="city" placeholder="Enter city (optional)">
+    </div>
+
+    <button type="submit" class="ingram-shipping-calculator__button">
+      {{ block.settings.button_text }}
+    </button>
+  </form>
+
+  <div class="ingram-shipping-calculator__results" id="ingram-shipping-results" style="display: none;">
+    <h4>{{ block.settings.results_title }}</h4>
+    <div class="ingram-shipping-calculator__rates" id="ingram-shipping-rates"></div>
+  </div>
+
+  <div class="ingram-shipping-calculator__loading" id="ingram-shipping-loading" style="display: none;">
+    <span>{{ block.settings.loading_text }}</span>
+  </div>
+
+  <div class="ingram-shipping-calculator__error" id="ingram-shipping-error" style="display: none;"></div>
+</div>
+
+<style>
+  .ingram-shipping-calculator {
+    padding: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    margin: 20px 0;
+    background: #fafafa;
+  }
+
+  .ingram-shipping-calculator__title {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .ingram-shipping-calculator__form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ingram-shipping-calculator__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ingram-shipping-calculator__field label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .ingram-shipping-calculator__field input,
+  .ingram-shipping-calculator__field select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .ingram-shipping-calculator__button {
+    margin-top: 8px;
+    padding: 12px 20px;
+    background: {{ block.settings.button_color }};
+    color: {{ block.settings.button_text_color }};
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .ingram-shipping-calculator__button:hover {
+    opacity: 0.9;
+  }
+
+  .ingram-shipping-calculator__button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .ingram-shipping-calculator__results {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e5e5;
+  }
+
+  .ingram-shipping-calculator__results h4 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .ingram-shipping-calculator__rate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+  }
+
+  .ingram-shipping-calculator__rate-name {
+    font-weight: 500;
+  }
+
+  .ingram-shipping-calculator__rate-price {
+    font-weight: 600;
+    color: {{ block.settings.price_color }};
+  }
+
+  .ingram-shipping-calculator__loading {
+    margin-top: 15px;
+    text-align: center;
+    color: #666;
+  }
+
+  .ingram-shipping-calculator__error {
+    margin-top: 15px;
+    padding: 12px;
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 4px;
+    color: #c00;
+    font-size: 14px;
+  }
+</style>
+
+<script>
+  (function() {
+    const US_STATES = [
+      { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+      { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+      { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'FL', name: 'Florida' },
+      { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' }, { code: 'ID', name: 'Idaho' },
+      { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' }, { code: 'IA', name: 'Iowa' },
+      { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' }, { code: 'LA', name: 'Louisiana' },
+      { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' }, { code: 'MA', name: 'Massachusetts' },
+      { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' }, { code: 'MS', name: 'Mississippi' },
+      { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' }, { code: 'NE', name: 'Nebraska' },
+      { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' }, { code: 'NJ', name: 'New Jersey' },
+      { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' }, { code: 'NC', name: 'North Carolina' },
+      { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' }, { code: 'OK', name: 'Oklahoma' },
+      { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' }, { code: 'RI', name: 'Rhode Island' },
+      { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' }, { code: 'TN', name: 'Tennessee' },
+      { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' }, { code: 'VT', name: 'Vermont' },
+      { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' }, { code: 'WV', name: 'West Virginia' },
+      { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
+    ];
+
+    const CA_PROVINCES = [
+      { code: 'AB', name: 'Alberta' }, { code: 'BC', name: 'British Columbia' },
+      { code: 'MB', name: 'Manitoba' }, { code: 'NB', name: 'New Brunswick' },
+      { code: 'NL', name: 'Newfoundland and Labrador' }, { code: 'NS', name: 'Nova Scotia' },
+      { code: 'NT', name: 'Northwest Territories' }, { code: 'NU', name: 'Nunavut' },
+      { code: 'ON', name: 'Ontario' }, { code: 'PE', name: 'Prince Edward Island' },
+      { code: 'QC', name: 'Quebec' }, { code: 'SK', name: 'Saskatchewan' }, { code: 'YT', name: 'Yukon' }
+    ];
+
+    const container = document.querySelector('.ingram-shipping-calculator');
+    if (!container) return;
+
+    const shop = container.dataset.shop;
+    const apiUrl = container.dataset.apiUrl || 'https://ingram-mirco.vercel.app/api/cart-estimate';
+
+    const form = document.getElementById('ingram-shipping-form');
+    const countrySelect = document.getElementById('ingram-country');
+    const provinceSelect = document.getElementById('ingram-province');
+    const resultsContainer = document.getElementById('ingram-shipping-results');
+    const ratesContainer = document.getElementById('ingram-shipping-rates');
+    const loadingContainer = document.getElementById('ingram-shipping-loading');
+    const errorContainer = document.getElementById('ingram-shipping-error');
+
+    // Update provinces based on country
+    function updateProvinces() {
+      const country = countrySelect.value;
+      const provinces = country === 'US' ? US_STATES : CA_PROVINCES;
+
+      provinceSelect.innerHTML = '<option value="">Select state/province</option>';
+      provinces.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.code;
+        option.textContent = p.name;
+        provinceSelect.appendChild(option);
+      });
+    }
+
+    countrySelect.addEventListener('change', updateProvinces);
+    updateProvinces(); // Initialize
+
+    // Get cart items
+    async function getCartItems() {
+      try {
+        const response = await fetch('/cart.js');
+        const cart = await response.json();
+        return cart.items.map(item => ({
+          sku: item.sku || item.variant_id.toString(),
+          quantity: item.quantity,
+          grams: item.grams
+        }));
+      } catch (e) {
+        console.error('Failed to get cart:', e);
+        return [];
+      }
+    }
+
+    // Calculate shipping
+    async function calculateShipping(e) {
+      e.preventDefault();
+
+      const button = form.querySelector('button');
+      button.disabled = true;
+      loadingContainer.style.display = 'block';
+      resultsContainer.style.display = 'none';
+      errorContainer.style.display = 'none';
+
+      try {
+        const items = await getCartItems();
+
+        if (items.length === 0) {
+          throw new Error('Your cart is empty');
+        }
+
+        const address = {
+          country: countrySelect.value,
+          province: provinceSelect.value,
+          city: document.getElementById('ingram-city').value,
+          zip: document.getElementById('ingram-zip').value
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ shop, address, items })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Unable to calculate shipping');
+        }
+
+        if (!data.rates || data.rates.length === 0) {
+          throw new Error('No shipping options available for this address');
+        }
+
+        // Display rates
+        ratesContainer.innerHTML = '';
+        data.rates.forEach(rate => {
+          const rateEl = document.createElement('div');
+          rateEl.className = 'ingram-shipping-calculator__rate';
+          rateEl.innerHTML = `
+            <span class="ingram-shipping-calculator__rate-name">${rate.name}</span>
+            <span class="ingram-shipping-calculator__rate-price">$${rate.price.toFixed(2)} ${rate.currency}</span>
+          `;
+          ratesContainer.appendChild(rateEl);
+        });
+
+        resultsContainer.style.display = 'block';
+
+      } catch (error) {
+        errorContainer.textContent = error.message;
+        errorContainer.style.display = 'block';
+      } finally {
+        button.disabled = false;
+        loadingContainer.style.display = 'none';
+      }
+    }
+
+    form.addEventListener('submit', calculateShipping);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Shipping Calculator",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Estimate Shipping"
+    },
+    {
+      "type": "text",
+      "id": "api_url",
+      "label": "API URL",
+      "default": "https://ingram-mirco.vercel.app/api/cart-estimate",
+      "info": "The Ingram Micro shipping estimate API endpoint"
+    },
+    {
+      "type": "text",
+      "id": "country_label",
+      "label": "Country Label",
+      "default": "Country/Region"
+    },
+    {
+      "type": "text",
+      "id": "province_label",
+      "label": "State/Province Label",
+      "default": "State/Province"
+    },
+    {
+      "type": "text",
+      "id": "zip_label",
+      "label": "ZIP Code Label",
+      "default": "ZIP/Postal Code"
+    },
+    {
+      "type": "text",
+      "id": "city_label",
+      "label": "City Label",
+      "default": "City (optional)"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button Text",
+      "default": "Calculate Shipping"
+    },
+    {
+      "type": "text",
+      "id": "results_title",
+      "label": "Results Title",
+      "default": "Available Shipping Options:"
+    },
+    {
+      "type": "text",
+      "id": "loading_text",
+      "label": "Loading Text",
+      "default": "Calculating shipping rates..."
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Button Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button Text Color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "price_color",
+      "label": "Price Color",
+      "default": "#000000"
+    }
+  ]
+}
+{% endschema %}

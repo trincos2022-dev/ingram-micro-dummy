@@ -1,0 +1,141 @@
+// This is your Prisma schema file
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["public", "auth"]
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+
+  @@schema("public")
+}
+
+model IngramCredential {
+  shopDomain            String   @id
+  clientId              String
+  clientSecret          String
+  customerNumber        String
+  countryCode           String   @default("US")
+  contactEmail          String?
+  senderId              String?
+  billToAddressId       String?
+  shipToAddressId       String?
+  sandbox               Boolean  @default(true)
+  accessToken           String?
+  accessTokenExpiresAt  DateTime?
+  lastValidatedAt       DateTime?
+  lastValidationStatus  String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@schema("public")
+}
+
+model CarrierConfiguration {
+  id           String   @id @default(cuid())
+  shopDomain   String
+  carrierCode  String
+  carrierName  String
+  carrierMode  String
+  displayName  String?
+  enabled      Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([shopDomain, carrierCode])
+  @@index([shopDomain])
+  @@schema("public")
+}
+
+model RateRequestLog {
+  id                String   @id @default(cuid())
+  shopDomain        String
+  correlationId     String   @unique
+  requestType       String
+  cartItemCount     Int
+  cartSkus          String
+  ingramPartNums    String?
+  shipToCity        String?
+  shipToState       String?
+  shipToZip         String?
+  shipToCountry     String?
+  status            String
+  distributionCount Int?
+  ratesReturned     Int?
+  ratesData         String?
+  errorMessage      String?
+  errorDetails      String?
+  ingramRawResponse String?
+  durationMs        Int?
+  createdAt         DateTime @default(now())
+
+  @@index([shopDomain])
+  @@index([createdAt])
+  @@index([status])
+  @@schema("public")
+}
+
+model ProductMapping {
+  id               String   @id @default(cuid())
+  shopDomain       String
+  sku              String
+  ingramPartNumber String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([shopDomain, sku])
+  @@index([shopDomain])
+  @@schema("public")
+}
+
+model ProductSyncJob {
+  id         String   @id @default(cuid())
+  shopDomain String
+  status     String
+  processed  Int      @default(0)
+  total      Int      @default(0)
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  finishedAt DateTime?
+
+  @@index([shopDomain])
+  @@index([status])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model FallbackRateSettings {
+  shopDomain  String   @id
+  enabled     Boolean  @default(true)
+  price       Float    @default(999.00)
+  title       String   @default("Shipping Unavailable")
+  description String   @default("Please contact support before placing this order")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("public")
+}

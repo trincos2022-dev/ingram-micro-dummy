@@ -1,5 +1,5 @@
 {
-  "name": "ingram-micro-integra",
+  "name": "ingram-micro-integration",
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",

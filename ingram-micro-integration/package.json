@@ -1,5 +1,5 @@
 {
-  "name": "Newfolder",
+  "name": "ingram-micro-integration",
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",

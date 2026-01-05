@@ -1,21 +1,19 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "a45536b0a81f823693b68c8799306d03"
+client_id = "c99038e19788b2c4925adda9ddafc8fb"
 name = "ingram-micro-dummy-z9h6"
-application_url = "https://ingram-micro-dummy-z9h6.vercel.app"
-embedded = false
+application_url = "https://example.com"
+embedded = true
 
 [webhooks]
-api_version = "2025-10"
+api_version = "2026-04"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
-optional_scopes = [ ]
-use_legacy_install_flow = false
+scopes = "read_all_cart_transforms,read_cart_transforms,read_delivery_customizations,read_fulfillment_constraint_rules,read_inventory_shipments,read_metaobject_definitions,read_metaobjects,read_order_edits,read_orders,read_product_feeds,read_product_listings,read_products,read_shipping,read_third_party_fulfillment_orders,write_cart_transforms,write_delivery_customizations,write_fulfillment_constraint_rules,write_inventory_shipments,write_metaobject_definitions,write_metaobjects,write_order_edits,write_orders,write_product_feeds,write_product_listings,write_products,write_shipping,write_third_party_fulfillment_orders"
 
 [auth]
-redirect_urls = [ "https://ingram-micro-dummy-z9h6.vercel.app/auth/callback" ]
+redirect_urls = [ "https://example.com/api/auth" ]
 
 [build]
 automatically_update_urls_on_dev = true

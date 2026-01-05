@@ -8,7 +8,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     const current = payload.current as string[];
     if (session) {
-        await db.session.update({   
+        await db.session.update({
             where: {
                 id: session.id
             },
@@ -19,3 +19,5 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
     return new Response();
 };
+
+export default null;
